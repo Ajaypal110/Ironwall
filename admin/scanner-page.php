@@ -104,43 +104,44 @@ function irw_scanner_page() {
 										<div style="color:#e2e8f0; font-size:13px; margin-bottom: 4px; font-weight: 500;">
 											<?php echo esc_html( $res->issue_type ); ?>
 										</div>
-										<div style="color:var(--wsg-text-dim); font-size:12px; margin-bottom: 12px; line-height: 1.4;">
+										<div style="color:var(--wsg-text-dim); font-size:12px; line-height: 1.4;">
 											<?php echo esc_html( $res->details ); ?>
 										</div>
+									</td>
+									<td style="max-width:300px;">
 										<?php
 										$suggestion = '';
 										$sug_color = '#94a3b8';
 										if ( strpos( $res->issue_type, 'Missing Core' ) !== false ) {
-											$suggestion = __( 'Action: Re-install WordPress core to safely restore this missing file.', 'ironwall' );
+											$suggestion = __( 'Suggestion: Re-install WordPress core to safely restore this missing file.', 'ironwall' );
 											$sug_color  = '#facc15';
 										} elseif ( strpos( $res->issue_type, 'Core File Modified' ) !== false ) {
-											$suggestion = __( 'Action: Core file altered. Overwrite immediately with official WP repository file.', 'ironwall' );
+											$suggestion = __( 'Suggestion: Core file altered. Overwrite immediately with official WP repository file.', 'ironwall' );
 											$sug_color  = '#f87171';
 										} elseif ( strpos( $res->issue_type, 'Malware Signature' ) !== false ) {
-											$suggestion = __( 'Action: High risk payload detected. Quarantine the file to secure your site.', 'ironwall' );
+											$suggestion = __( 'Suggestion: High risk payload detected. Quarantine the file to secure your site.', 'ironwall' );
 											$sug_color  = '#f87171';
 										} elseif ( strpos( $res->issue_type, 'Highly Obfuscated' ) !== false ) {
-											$suggestion = __( 'Action: Suspicious encoding. Manually inspect code for hidden backdoors.', 'ironwall' );
+											$suggestion = __( 'Suggestion: Suspicious encoding. Manually inspect code for hidden backdoors.', 'ironwall' );
 											$sug_color  = '#fb923c';
 										} elseif ( strpos( $res->issue_type, 'Security Misconfiguration' ) !== false ) {
 											if ( strpos( $res->details, 'admin' ) !== false ) {
-												$suggestion = __( 'Action: Create a new administrator account and delete the "admin" user.', 'ironwall' );
+												$suggestion = __( 'Suggestion: Create a new administrator account and delete the "admin" user.', 'ironwall' );
 											} else {
-												$suggestion = __( 'Action: Update your WordPress settings to secure this vulnerability.', 'ironwall' );
+												$suggestion = __( 'Suggestion: Update your WordPress settings to secure this vulnerability.', 'ironwall' );
 											}
 											$sug_color  = '#fb923c';
 										} else {
-											$suggestion = __( 'Action: Review file context for potential anomalies.', 'ironwall' );
+											$suggestion = __( 'Suggestion: Review file context for potential anomalies.', 'ironwall' );
 										}
 										?>
-										<div style="color:<?php echo esc_attr( $sug_color ); ?>; font-size:11.5px; font-weight: 500; display:flex; align-items:flex-start; gap:6px; background: rgba(0,0,0,0.2); padding: 8px 10px; border-radius: 6px; border-left: 2px solid <?php echo esc_attr( $sug_color ); ?>;">
+										<div style="color:<?php echo esc_attr( $sug_color ); ?>; font-size:11.5px; font-weight: 500; display:flex; align-items:flex-start; gap:6px; background: rgba(0,0,0,0.2); padding: 8px 10px; border-radius: 6px; border-left: 2px solid <?php echo esc_attr( $sug_color ); ?>; margin-bottom: 10px;">
 											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
 											<span><?php echo esc_html( $suggestion ); ?></span>
 										</div>
-									</td>
-									<td>
+
 										<?php if ( 'critical' === $res->severity || 'high' === $res->severity ) : ?>
-											<?php $q_url = wp_nonce_url( '?page=wsg-scanner&irw_quarantine=' . rawurlencode( $res->file_path ), 'irw_quarantine_action' ); ?>
+											<?php $q_url = wp_nonce_url( '?page=ironwall-scanner&irw_quarantine=' . rawurlencode( $res->file_path ), 'irw_quarantine_action' ); ?>
 											<a href="<?php echo esc_url( $q_url ); ?>" class="btn-action-small btn-delete">
 												<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
 												<?php esc_html_e( 'Quarantine', 'ironwall' ); ?>
