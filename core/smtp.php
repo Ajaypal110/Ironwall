@@ -17,8 +17,12 @@ function wsg_configure_smtp($phpmailer) {
     $port     = get_option('wsg_smtp_port', 587);
     $username = get_option('wsg_smtp_username', '');
     $password = get_option('wsg_smtp_password', '');
-    $from     = get_option('wsg_smtp_from', $username);
-    $fromname = get_option('wsg_smtp_from_name', get_bloginfo('name'));
+    $from     = get_option('wsg_smtp_from', '');
+    $fromname = get_option('wsg_smtp_from_name', '');
+
+    // Fallback: use username as From if not set
+    if (empty($from)) $from = $username;
+    if (empty($fromname)) $fromname = get_bloginfo('name');
 
     if (empty($host) || empty($username) || empty($password)) return;
 
@@ -40,11 +44,41 @@ function wsg_test_smtp_handler() {
     if (!current_user_can('manage_options')) { wp_die('Unauthorized'); }
     check_admin_referer('wsg_test_smtp_action');
 
+    // Temporarily force SMTP on for this test, even if the toggle is off
+    $host     = get_option('wsg_smtp_host', '');
+    $port     = get_option('wsg_smtp_port', 587);
+    $username = get_option('wsg_smtp_username', '');
+    $password = get_option('wsg_smtp_password', '');
+    $from     = get_option('wsg_smtp_from', '');
+    $fromname = get_option('wsg_smtp_from_name', '');
+
+    if (empty($from)) $from = $username;
+    if (empty($fromname)) $fromname = get_bloginfo('name');
+
+    if (empty($host) || empty($username) || empty($password)) {
+        set_transient('wsg_smtp_test_result', 'fail:Please fill in SMTP Host, Username, and Password before testing.', 30);
+        wp_redirect(admin_url('admin.php?page=wsg-settings'));
+        exit;
+    }
+
+    // Force-apply SMTP just for this request
+    add_action('phpmailer_init', function($phpmailer) use ($host, $port, $username, $password, $from, $fromname) {
+        $phpmailer->isSMTP();
+        $phpmailer->Host       = $host;
+        $phpmailer->SMTPAuth   = true;
+        $phpmailer->Port       = (int) $port;
+        $phpmailer->Username   = $username;
+        $phpmailer->Password   = $password;
+        $phpmailer->SMTPSecure = ((int) $port === 465) ? 'ssl' : 'tls';
+        $phpmailer->From       = $from;
+        $phpmailer->FromName   = $fromname;
+    }, 99);
+
     $current_user = wp_get_current_user();
     $to = $current_user->user_email;
 
     $subject = 'WP Sentinel SMTP Test';
-    $headers = array('Content-Type: text/html; charset=UTF-8');
+    $headers = array('Content-Type: text/html; charset=UTF-8', 'From: ' . $fromname . ' <' . $from . '>');
     $message = "
     <div style='font-family:sans-serif; max-width:500px; border:1px solid #e2e8f0; padding:24px; border-radius:12px;'>
         <h2 style='color:#4f46e5; margin-top:0;'>✅ SMTP Configuration Verified</h2>
@@ -60,8 +94,8 @@ function wsg_test_smtp_handler() {
         set_transient('wsg_smtp_test_result', 'success', 30);
     } else {
         global $phpmailer;
-        $error = '';
-        if (isset($phpmailer) && is_object($phpmailer)) {
+        $error = 'Unknown error';
+        if (isset($phpmailer) && is_object($phpmailer) && !empty($phpmailer->ErrorInfo)) {
             $error = $phpmailer->ErrorInfo;
         }
         set_transient('wsg_smtp_test_result', 'fail:' . $error, 30);
