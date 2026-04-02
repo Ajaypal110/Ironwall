@@ -1,0 +1,70 @@
+WP SENTINEL – INSTALLATION GUIDE
+
+Version: 4.3
+Developer: Ajaypal Singh
+
+INSTALLATION STEPS:
+
+Step 1:
+Login to WordPress Admin Dashboard
+
+Step 2:
+Go to:
+Plugins → Add New
+
+Step 3:
+Click:
+Upload Plugin
+
+Step 4:
+Select:
+wp-sentinel.zip
+
+Step 5:
+Click:
+Install Now
+
+Step 6:
+Click:
+Activate Plugin
+
+Step 7:
+Go to:
+Security → Settings
+
+Step 8:
+Enable recommended protections:
+✓ Login Protection
+✓ XMLRPC Protection
+✓ Security Headers
+
+Step 9:
+Set custom login URL
+Example:
+secure-login
+
+IMPORTANT:
+Bookmark your custom login URL before saving.
+
+Example:
+https://yourwebsite.com/secure-login
+
+INSTALLATION COMPLETE.
+
+
+POST INSTALLATION CHECKLIST:
+
+Confirm:
+Login protection enabled
+XMLRPC disabled
+Security headers active
+Custom login URL working
+Logs recording activity
+
+Recommended:
+Change default admin username
+Use strong passwords
+Keep plugins updated
+
+Support:
+Contact developer if needed.

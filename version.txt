@@ -1,0 +1,69 @@
+WP SENTINEL
+
+Version: 4.3
+
+Plugin Type:
+WordPress Security Monitoring & Protection Plugin
+
+Developer:
+Ajaypal Singh
+
+RELEASE INFORMATION:
+
+Version 4.3
+Added:
+Custom login URL protection
+Security scanner
+Security issues detection
+Improved security dashboard
+Security score improvements
+
+Version 4.0
+Added:
+Activity logging system
+Failed login tracking
+Successful login tracking
+Security event logs
+Admin logs viewer
+
+Version 3.0
+Added:
+Security dashboard
+Security score
+Protection status display
+Security recommendations
+
+Version 2.0
+Added:
+Login brute force protection
+XMLRPC protection
+Security headers
+File editor protection
+Admin settings panel
+
+Version 1.0
+Initial release:
+Basic security hardening
+WordPress version hiding
+Login error protection
+Author enumeration protection
+
+CURRENT VERSION CAPABILITIES:
+
+Security Protection
+Security Monitoring
+Security Dashboard
+Custom Login Security
+Basic Vulnerability Scanning
+
+STATUS:
+Stable Release
+
+NEXT PLANNED VERSION:
+
+Version 5 (Planned):
+IP blocking engine
+Attack auto blocking
+Blocked IP management
+Security alerts
+Attack analytics
