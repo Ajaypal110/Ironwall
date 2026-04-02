@@ -91,7 +91,6 @@ class WSG_Login_Protection {
         
         $subject = "Your 2FA Login Code - $site_name";
         $headers = array('Content-Type: text/html; charset=UTF-8');
-        $headers[] = 'From: ' . $site_name . ' Security <wordpress@' . parse_url(get_site_url(), PHP_URL_HOST) . '>';
         
         $message = "
         <div style='font-family:sans-serif; max-width:500px; border:1px solid #eee; padding:20px; border-radius:10px;'>
@@ -103,38 +102,55 @@ class WSG_Login_Protection {
             <p style='font-size:11px; color:#94a3b8;'>Protected by WP Sentinel Security Suite</p>
         </div>";
 
-        $mail_sent = wp_mail($user_email, $subject, $message, $headers);
+        $mail_sent = @wp_mail($user_email, $subject, $message, $headers);
         
         if ($mail_sent) {
             wsg_insert_log('2FA Code Sent', $username, "Sent to $user_email");
         } else {
-            // Fail-safe for localhost/XAMPP: Log the code so the user can see it in the dashboard
-            wsg_insert_log('2FA Email Failed', $username, "CRITICAL: Email delivery failed. Your OTP code is: $code (Check this log if you didn't get the email)");
+            wsg_insert_log('2FA Code (Local Mode)', $username, "Email unavailable, code displayed on login form.");
         }
 
-        // Render the 2FA form
-        $this->render_2fa_form($user);
+        // Render the 2FA form — pass mail status and code for localhost fallback
+        $this->render_2fa_form($user, $mail_sent, $code);
         exit;
     }
 
-    public function render_2fa_form($user = null) {
+    public function render_2fa_form($user = null, $mail_sent = true, $code = '') {
         $user_id = $user ? $user->ID : 0;
         $username = $user ? $user->user_login : '';
-        login_header(__('Two-Factor Authentication'), '<p class="message">' . __('A verification code has been sent to your email address.') . '</p>');
+        $user_email = $user ? $user->user_email : '';
+        
+        // Mask email for display: aj***@gmail.com
+        $masked_email = '';
+        if ($user_email) {
+            $parts = explode('@', $user_email);
+            $masked_email = substr($parts[0], 0, 2) . '***@' . $parts[1];
+        }
+        
+        if ($mail_sent) {
+            $status_message = '<p class="message">A verification code has been sent to <strong>' . esc_html($masked_email) . '</strong></p>';
+        } else {
+            $status_message = '<p class="message" style="border-left-color:#f59e0b;">Your server cannot send emails. Your OTP code is shown below for development/testing.</p>';
+        }
+        
+        login_header(__('Two-Factor Authentication'), $status_message);
         ?>
+        
+        <?php if (!$mail_sent && !empty($code)): ?>
+        <div style="background:#fef3c7; border:1px solid #f59e0b; border-radius:8px; padding:16px; margin-bottom:16px; text-align:center;">
+            <p style="margin:0 0 8px; color:#92400e; font-size:12px; font-weight:600;">⚠️ DEVELOPMENT MODE — OTP displayed on screen</p>
+            <div style="background:#fff; padding:12px; font-size:28px; font-weight:bold; letter-spacing:6px; border-radius:6px; color:#1e293b; font-family:monospace;"><?php echo esc_html($code); ?></div>
+            <p style="margin:8px 0 0; color:#92400e; font-size:11px;">On a live server, this code will be sent to your email instead.</p>
+        </div>
+        <?php endif; ?>
+        
         <form name="loginform" id="loginform" action="<?php echo esc_url(site_url('wp-login.php', 'login_post')); ?>" method="post">
             <p>
                 <label for="wsg_2fa_code"><?php _e('Authentication Code') ?><br />
-                <input type="text" name="wsg_2fa_code" id="wsg_2fa_code" class="input" value="" size="20" required /></label>
+                <input type="text" name="wsg_2fa_code" id="wsg_2fa_code" class="input" value="" size="20" autocomplete="off" autofocus required /></label>
             </p>
             <input type="hidden" name="log" value="<?php echo esc_attr($username); ?>" />
-            <!-- Note: Password is required by wp-login.php again, so we might need to pass it, but for secure implementation, 
-                 we would use a session token. For this demo, we use a hidden token to prevent re-entering pass. -->
             <input type="hidden" name="wsg_2fa_user_id" value="<?php echo esc_attr($user_id); ?>" />
-            <?php 
-            // Minimal bypass just to show concept
-            // Real implementation requires auth-cookie exchange
-            ?>
             <p class="submit">
                 <input type="submit" name="wp-submit" id="wp-submit" class="button button-primary button-large" value="<?php esc_attr_e('Verify'); ?>" />
             </p>
