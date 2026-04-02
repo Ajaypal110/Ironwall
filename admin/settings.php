@@ -106,7 +106,7 @@ function irw_settings_page() {
 						<ul class="wsg-list">
 							<li>
 								<span style="color:var(--wsg-text-muted);font-size:13px;"><?php esc_html_e( 'Plugin Version', 'ironwall' ); ?></span>
-								<span class="wsg-status-badge wsg-status-on"><?php echo esc_html( defined( 'IRW_VERSION' ) ? IRW_VERSION : '5.0' ); ?></span>
+								<span class="wsg-status-badge wsg-status-on"><?php echo esc_html( defined( 'IRW_VERSION' ) ? IRW_VERSION : '6.0' ); ?></span>
 							</li>
 							<li>
 								<span style="color:var(--wsg-text-muted);font-size:13px;"><?php esc_html_e( 'PHP Version', 'ironwall' ); ?></span>

@@ -1,5 +1,5 @@
 /**
- * Ironwall v5.0 — Admin JS
+ * Ironwall v6.0 — Admin JS
  *
  * Handles global admin UI interactions and animations.
  */

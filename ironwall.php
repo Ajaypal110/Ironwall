@@ -3,7 +3,7 @@
  * Plugin Name: Ironwall
  * Plugin URI: https://github.com/Ajaypal110/Ironwall.git
  * Description: Professional-grade WordPress security monitoring, WAF, and Malware Scanner.
- * Version: 5.1
+ * Version: 6.0
  * Author: Ajaypal Singh
  * Author URI: https://github.com/Ajaypal110
  * License: GPLv2 or later

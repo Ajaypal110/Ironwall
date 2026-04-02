@@ -19,7 +19,7 @@ class Plugin {
     }
 
     private function define_constants() {
-        if (!defined('IRW_VERSION')) define('IRW_VERSION', '5.0');
+        if (!defined('IRW_VERSION')) define('IRW_VERSION', '6.0');
         if (!defined('IRW_PATH')) define('IRW_PATH', plugin_dir_path(dirname(__FILE__)));
         if (!defined('IRW_URL')) define('IRW_URL', plugin_dir_url(dirname(__FILE__)));
     }
@@ -393,7 +393,7 @@ class Plugin {
         $res->num_ratings = 485;
         $res->sections = array(
             'description' => '<strong>Ironwall</strong> is a professional-grade WordPress security suite featuring an enterprise-level Web Application Firewall (WAF), real-time Live Traffic logging, and an algorithmic Malware & Integrity Scanner.',
-            'changelog' => '<ul><li>5.0 - Complete UI/UX overhaul with dark-mode dashboard, all bugs fixed.</li><li>4.6 - Professional-grade architecture refactoring & asset consolidation.</li></ul>',
+            'changelog' => '<ul><li>6.0 - Final production release with adaptive timezone UI & finalized layouts.</li><li>5.0 - Complete UI/UX overhaul with dark-mode dashboard, all bugs fixed.</li><li>4.6 - Professional-grade architecture refactoring & asset consolidation.</li></ul>',
             'installation' => 'Simply upload the zip and activate. All protection engines start automatically.',
             'faq' => '<strong>Does it work with Wordfence?</strong> It is designed to replace it entirely with lighter performance overhead.'
         );

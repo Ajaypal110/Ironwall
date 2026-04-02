@@ -1,5 +1,5 @@
 /**
- * Ironwall v5.0 — Dashboard Analytics
+ * Ironwall v6.0 — Dashboard Analytics
  *
  * Dark-theme Chart.js visualizations for security events and traffic.
  */

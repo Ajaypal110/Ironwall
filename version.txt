@@ -1,6 +1,6 @@
 Ironwall
 
-Version: 4.3
+Version: 6.0
 
 Plugin Type:
 WordPress Security Monitoring & Protection Plugin
@@ -9,6 +9,19 @@ Developer:
 Ajaypal Singh
 
 RELEASE INFORMATION:
+
+Version 6.0
+Added:
+Adaptive timezone parser for UI logs
+Resolved UI layout issues and suggestion placement
+Production-ready core architecture
+
+Version 5.0
+Added:
+Enterprise WAF engine
+Live Live Traffic Logs
+Deep algorithmic malware scanner
+Complete UI/UX dark mode overhaul
 
 Version 4.3
 Added:
@@ -54,16 +67,9 @@ Security Protection
 Security Monitoring
 Security Dashboard
 Custom Login Security
-Basic Vulnerability Scanning
+Advanced Malware Scanning
+Live Traffic Logging
+WAF Engine
 
 STATUS:
-Stable Release
-
-NEXT PLANNED VERSION:
-
-Version 5 (Planned):
-IP blocking engine
-Attack auto blocking
-Blocked IP management
-Security alerts
-Attack analytics
+Stable Release
