@@ -1,6 +1,6 @@
 WP SENTINEL – INSTALLATION GUIDE
 
-Version: 4.3
+Version: 4.6
 Developer: Ajaypal Singh
 
 INSTALLATION STEPS:
@@ -18,7 +18,7 @@ Upload Plugin
 
 Step 4:
 Select:
-wp-sentinel.zip
+ironwall.zip
 
 Step 5:
 Click:

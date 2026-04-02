@@ -1,174 +1,240 @@
 <?php
-if(!defined('ABSPATH')){
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
-function wsg_scanner_page(){
-    global $wpdb;
+function irw_scanner_page() {
+	global $wpdb;
 
-    // Handle scan trigger
-    if (isset($_POST['wsg_run_scan']) && check_admin_referer('wsg_run_scan_action', 'wsg_scan_nonce')) {
-        if (class_exists('WSG_Scanner')) {
-            $scanner = new WSG_Scanner();
-            $scanner->run_full_scan();
-            echo '<div class="notice notice-success is-dismissible" style="border-left-color: #4f46e5;"><p><strong>Scan Complete:</strong> System analysis finished successfully!</p></div>';
-        } else {
-            echo '<div class="notice notice-error is-dismissible"><p>Scanner module not loaded.</p></div>';
-        }
-    }
-    
-    // Handle quarantine action
-    if (isset($_GET['wsg_quarantine']) && isset($_GET['_wpnonce']) && wp_verify_nonce($_GET['_wpnonce'], 'wsg_quarantine_action')) {
-        $target_file = sanitize_text_field(urldecode($_GET['wsg_quarantine']));
-        
-        // Ensure the file exists and is actually a literal file path in WP structure (preventing arbitrary string quarantines)
-        if (file_exists($target_file) && strpos($target_file, ABSPATH) === 0) {
-            $quarantine_name = $target_file . '.wsg-quarantined';
-            if (@rename($target_file, $quarantine_name)) {
-                $wpdb->delete($wpdb->prefix . 'wsg_scan_results', array('file_path' => $target_file));
-                echo '<div class="notice notice-success is-dismissible"><p>File successfully quarantined and rendered inert.</p></div>';
-            } else {
-                echo '<div class="notice notice-error is-dismissible"><p>Failed to quarantine file. Check permissions.</p></div>';
-            }
-        } else {
-            // Dismiss false positive or DB abstract string alert
-            $wpdb->delete($wpdb->prefix . 'wsg_scan_results', array('file_path' => $target_file));
-            echo '<div class="notice notice-info is-dismissible"><p>Threat record dismissed from scanner.</p></div>';
-        }
-    }
+	// Handle quarantine action.
+	if ( isset( $_GET['irw_quarantine'], $_GET['_wpnonce'] ) && wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'irw_quarantine_action' ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to perform this action.', 'ironwall' ) );
+		}
+		$target_file = sanitize_text_field( urldecode( $_GET['irw_quarantine'] ) );
+		if ( file_exists( $target_file ) && 0 === strpos( $target_file, ABSPATH ) ) {
+			$quarantine_name = $target_file . '.wsg-quarantined';
+			if ( @rename( $target_file, $quarantine_name ) ) {
+				$wpdb->delete( $wpdb->prefix . 'irw_scan_results', array( 'file_path' => $target_file ) );
+				echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'File successfully quarantined.', 'ironwall' ) . '</p></div>';
+			}
+		}
+	}
 
-    $table_scans = $wpdb->prefix . 'wsg_scan_results';
-    $results = $wpdb->get_results("SELECT * FROM $table_scans ORDER BY severity DESC, created DESC");
-    $last_scan = get_option('wsg_last_scan', 'Never');
+	$results   = $wpdb->get_results( "SELECT * FROM {$wpdb->prefix}irw_scan_results ORDER BY severity DESC, created DESC" );
+	$last_scan = get_option( 'irw_last_scan', __( 'Never', 'ironwall' ) );
+	$res_count = count( $results );
 
-    ?>
-    <style>
-        .wsg-wrap { max-width: 1100px; margin: 20px 20px 20px 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; }
-        .wsg-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; }
-        .wsg-header h1 { font-size: 28px; font-weight: 600; color: #1e293b; margin: 0 0 8px; line-height: 1.2; }
-        .wsg-header p { color: #64748b; font-size: 15px; margin: 0; }
-        
-        /* Hero Card */
-        .wsg-scan-hero { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 12px; padding: 32px; display: flex; justify-content: space-between; align-items: center; color: white; margin-bottom: 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); }
-        .wsg-scan-info h2 { color: white; margin: 0 0 10px; font-size: 22px; }
-        .wsg-scan-info p { color: #cbd5e1; margin: 0 0 5px; font-size: 15px; }
-        .wsg-scan-info strong { color: #38bdf8; }
-        
-        .btn-pulse { background: #4f46e5; color: white; padding: 14px 32px; font-size: 16px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7); animation: pulse-blue 2s infinite; display: inline-flex; align-items: center; gap: 8px; }
-        .btn-pulse:hover { background: #4338ca; transform: translateY(-1px); }
-        .btn-pulse svg { width: 20px; height: 20px; }
-        
-        @keyframes pulse-blue {
-            0% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.7); }
-            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(79, 70, 229, 0); }
-            100% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
-        }
+	?>
+	<div class="wrap wsg-wrap">
+		<div class="wsg-header">
+			<div>
+				<h1><?php esc_html_e( 'Integrity Scanner', 'ironwall' ); ?></h1>
+				<p><?php esc_html_e( 'Deep algorithmic scans on themes, plugins, and WordPress core files.', 'ironwall' ); ?></p>
+			</div>
+		</div>
 
-        /* Results Card & Table */
-        .wsg-results-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .wsg-results-header { padding: 20px 24px; border-bottom: 1px solid #f1f5f9; background: #fafafa; }
-        .wsg-results-header h3 { margin: 0; font-size: 16px; font-weight: 600; color: #334155; }
-        
-        table.wsg-modern-table { width: 100%; border-collapse: collapse; text-align: left; }
-        table.wsg-modern-table th { background: #fff; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; }
-        table.wsg-modern-table td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; vertical-align: middle; }
-        table.wsg-modern-table tr:last-child td { border-bottom: none; }
-        
-        .code-path { background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 13px; color: #475569; word-break: break-all; }
-        
-        /* Badges */
-        .wsg-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 9999px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-        .badge-critical { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
-        .badge-high { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
-        .badge-medium { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
-        
-        /* Empty State */
-        .wsg-empty-state { padding: 60px 20px; text-align: center; }
-        .wsg-empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.8; }
-        .wsg-empty-text { font-size: 18px; color: #334155; font-weight: 500; margin: 0 0 8px; }
-        .wsg-empty-subtext { color: #64748b; font-size: 14px; margin: 0; }
-        
-        .btn-action-small { padding: 6px 12px; font-size: 13px; border-radius: 6px; text-decoration: none; display: inline-block; font-weight: 500; cursor: pointer; border: 1px solid transparent; }
-        .btn-delete { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
-        .btn-delete:hover { background: #fee2e2; color: #b91c1c; }
-    </style>
+		<div class="wsg-scan-hero">
+			<div class="wsg-scan-info">
+				<h2 id="wsg-scan-status"><?php esc_html_e( 'Scanner Status: Ready', 'ironwall' ); ?></h2>
+				<p><?php esc_html_e( 'Last Analysis:', 'ironwall' ); ?> <strong id="wsg-last-scan-display" style="color:var(--wsg-accent);"><?php echo esc_html( $last_scan ); ?></strong></p>
 
-    <div class="wsg-wrap">
-        <div class="wsg-header">
-            <h1>Integrity Scanner</h1>
-            <p>Perform deep algorithmic scans on your themes, plugins, and core files.</p>
-        </div>
+				<!-- Progress Bar -->
+				<div id="wsg-scan-progress-container" style="display:none; margin-top:24px; width:100%; max-width:420px;">
+					<div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:12px; font-weight:600; letter-spacing:0.04em;">
+						<span id="wsg-scan-step" style="color:var(--wsg-text-muted);"><?php esc_html_e( 'Initializing...', 'ironwall' ); ?></span>
+						<span id="wsg-scan-perc" style="color:var(--wsg-accent);">0%</span>
+					</div>
+					<div style="background:rgba(255,255,255,0.06); border-radius:10px; height:6px; overflow:hidden;">
+						<div id="wsg-scan-bar" style="background:var(--wsg-gradient); width:0%; height:100%; transition:width 0.4s cubic-bezier(0.4,0,0.2,1); border-radius:10px;"></div>
+					</div>
+				</div>
+			</div>
+			<div>
+				<button id="wsg-start-scan-btn" class="btn-pulse">
+					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+					<?php esc_html_e( 'Start Deep Scan', 'ironwall' ); ?>
+				</button>
+			</div>
+		</div>
 
-        <div class="wsg-scan-hero">
-            <div class="wsg-scan-info">
-                <h2>Scanner Status: Ready</h2>
-                <p>Last Analysis: <strong><?php echo esc_html($last_scan); ?></strong></p>
-                <p style="opacity:0.8; font-size:13px; margin-top:10px;">Connects securely to API.WordPress.org to verify core file checksums.</p>
-            </div>
-            <div>
-                <form method="post" action="">
-                    <?php wp_nonce_field('wsg_run_scan_action', 'wsg_scan_nonce'); ?>
-                    <button type="submit" name="wsg_run_scan" class="btn-pulse" onclick="this.innerHTML='<svg viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><path d=\'M21 12a9 9 0 11-6.219-8.56\'></path></svg> Scanning...'; this.style.animation='none'; this.style.opacity='0.8';">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        Start Deep Scan
-                    </button>
-                </form>
-            </div>
-        </div>
+		<div class="wsg-results-card">
+			<div class="wsg-results-header" style="display:flex;justify-content:space-between;align-items:center;">
+				<h3><?php esc_html_e( 'Threats & Deviations', 'ironwall' ); ?></h3>
+				<?php if ( $res_count > 0 ) : ?>
+					<span class="wsg-badge badge-critical" style="font-size:11px;"><?php echo esc_html( $res_count ); ?> <?php esc_html_e( 'found', 'ironwall' ); ?></span>
+				<?php endif; ?>
+			</div>
 
-        <div class="wsg-results-card">
-            <div class="wsg-results-header">
-                <h3>Threats & Deviations</h3>
-            </div>
-            
-            <?php if(empty($results)): ?>
-                <div class="wsg-empty-state">
-                    <div class="wsg-empty-icon">🛡️</div>
-                    <p class="wsg-empty-text">Zero Threats Detected</p>
-                    <p class="wsg-empty-subtext">Your files are pristine. No malware or core modifications found.</p>
-                </div>
-            <?php else: ?>
-                <table class="wsg-modern-table">
-                    <thead>
-                        <tr>
-                            <th>Location / Target</th>
-                            <th>Detection Engine</th>
-                            <th>Severity</th>
-                            <th>Details</th>
-                            <th>Resolution</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach($results as $res): ?>
-                            <tr>
-                                <td><span class="code-path"><?php echo esc_html($res->file_path); ?></span></td>
-                                <td><strong><?php echo esc_html($res->issue_type); ?></strong></td>
-                                <td>
-                                    <?php 
-                                    $sev_class = 'badge-medium';
-                                    if(strtolower($res->severity) == 'critical') $sev_class = 'badge-critical';
-                                    if(strtolower($res->severity) == 'high') $sev_class = 'badge-high';
-                                    ?>
-                                    <span class="wsg-badge <?php echo $sev_class; ?>">
-                                        <?php echo esc_html(strtoupper($res->severity)); ?>
-                                    </span>
-                                </td>
-                                <td style="color:#64748b; font-size:13px;"><?php echo esc_html($res->details); ?></td>
-                                <td>
-                                    <?php if($res->severity === 'critical' || $res->severity === 'high'): 
-                                        $q_url = wp_nonce_url('?page=wsg-scanner&wsg_quarantine=' . urlencode($res->file_path), 'wsg_quarantine_action');
-                                    ?>
-                                        <a href="<?php echo htmlspecialchars($q_url); ?>" class="btn-action-small btn-delete">Quarantine File</a>
-                                    <?php else: ?>
-                                        <span style="color:#94a3b8; font-size:12px;">Info Only</span>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-    </div>
-    <?php
+			<div id="wsg-scan-results-container">
+				<?php if ( empty( $results ) ) : ?>
+					<div class="wsg-empty-state">
+						<div class="wsg-empty-icon">🛡️</div>
+						<p class="wsg-empty-text"><?php esc_html_e( 'Zero Threats Detected', 'ironwall' ); ?></p>
+						<p class="wsg-empty-subtext"><?php esc_html_e( 'Your files are pristine. No malware or core modifications found.', 'ironwall' ); ?></p>
+					</div>
+				<?php else : ?>
+					<table class="wsg-modern-table">
+						<thead>
+							<tr>
+								<th><?php esc_html_e( 'Location / Target', 'ironwall' ); ?></th>
+								<th><?php esc_html_e( 'Severity', 'ironwall' ); ?></th>
+								<th><?php esc_html_e( 'Details', 'ironwall' ); ?></th>
+								<th><?php esc_html_e( 'Resolution', 'ironwall' ); ?></th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php foreach ( $results as $res ) : ?>
+								<tr>
+									<td><span class="code-path"><?php echo esc_html( $res->file_path ); ?></span></td>
+									<td>
+										<?php
+										$sev_class = 'badge-medium';
+										if ( 'critical' === strtolower( $res->severity ) ) {
+											$sev_class = 'badge-critical';
+										} elseif ( 'high' === strtolower( $res->severity ) ) {
+											$sev_class = 'badge-high';
+										}
+										?>
+										<span class="wsg-badge <?php echo esc_attr( $sev_class ); ?>">
+											<?php echo esc_html( strtoupper( $res->severity ) ); ?>
+										</span>
+									</td>
+									<td style="max-width:320px;">
+										<div style="color:#e2e8f0; font-size:13px; margin-bottom: 4px; font-weight: 500;">
+											<?php echo esc_html( $res->issue_type ); ?>
+										</div>
+										<div style="color:var(--wsg-text-dim); font-size:12px; margin-bottom: 12px; line-height: 1.4;">
+											<?php echo esc_html( $res->details ); ?>
+										</div>
+										<?php
+										$suggestion = '';
+										$sug_color = '#94a3b8';
+										if ( strpos( $res->issue_type, 'Missing Core' ) !== false ) {
+											$suggestion = __( 'Action: Re-install WordPress core to safely restore this missing file.', 'ironwall' );
+											$sug_color  = '#facc15';
+										} elseif ( strpos( $res->issue_type, 'Core File Modified' ) !== false ) {
+											$suggestion = __( 'Action: Core file altered. Overwrite immediately with official WP repository file.', 'ironwall' );
+											$sug_color  = '#f87171';
+										} elseif ( strpos( $res->issue_type, 'Malware Signature' ) !== false ) {
+											$suggestion = __( 'Action: High risk payload detected. Quarantine the file to secure your site.', 'ironwall' );
+											$sug_color  = '#f87171';
+										} elseif ( strpos( $res->issue_type, 'Highly Obfuscated' ) !== false ) {
+											$suggestion = __( 'Action: Suspicious encoding. Manually inspect code for hidden backdoors.', 'ironwall' );
+											$sug_color  = '#fb923c';
+										} elseif ( strpos( $res->issue_type, 'Security Misconfiguration' ) !== false ) {
+											if ( strpos( $res->details, 'admin' ) !== false ) {
+												$suggestion = __( 'Action: Create a new administrator account and delete the "admin" user.', 'ironwall' );
+											} else {
+												$suggestion = __( 'Action: Update your WordPress settings to secure this vulnerability.', 'ironwall' );
+											}
+											$sug_color  = '#fb923c';
+										} else {
+											$suggestion = __( 'Action: Review file context for potential anomalies.', 'ironwall' );
+										}
+										?>
+										<div style="color:<?php echo esc_attr( $sug_color ); ?>; font-size:11.5px; font-weight: 500; display:flex; align-items:flex-start; gap:6px; background: rgba(0,0,0,0.2); padding: 8px 10px; border-radius: 6px; border-left: 2px solid <?php echo esc_attr( $sug_color ); ?>;">
+											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+											<span><?php echo esc_html( $suggestion ); ?></span>
+										</div>
+									</td>
+									<td>
+										<?php if ( 'critical' === $res->severity || 'high' === $res->severity ) : ?>
+											<?php $q_url = wp_nonce_url( '?page=wsg-scanner&irw_quarantine=' . rawurlencode( $res->file_path ), 'irw_quarantine_action' ); ?>
+											<a href="<?php echo esc_url( $q_url ); ?>" class="btn-action-small btn-delete">
+												<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+												<?php esc_html_e( 'Quarantine', 'ironwall' ); ?>
+											</a>
+										<?php else : ?>
+											<span style="color:var(--wsg-text-dim); font-size:11px; text-transform:uppercase; letter-spacing:0.06em; font-weight:600;"><?php esc_html_e( 'Info Only', 'ironwall' ); ?></span>
+										<?php endif; ?>
+									</td>
+								</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
+				<?php endif; ?>
+			</div>
+		</div>
+	</div>
+
+	<script>
+	jQuery(document).ready(function($) {
+		let totalFiles = 0;
+		let processedFiles = 0;
+		const nonce = '<?php echo esc_js( wp_create_nonce( 'irw_scan_nonce' ) ); ?>';
+
+		$('#wsg-start-scan-btn').on('click', function() {
+			const btn = $(this);
+			btn.prop('disabled', true).css('opacity', 0.6);
+			btn.html('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> <?php echo esc_js( __( 'Initializing...', 'ironwall' ) ); ?>');
+			$('#wsg-scan-status').text('<?php echo esc_js( __( 'Scanner Status: Initializing...', 'ironwall' ) ); ?>');
+			$('#wsg-scan-progress-container').fadeIn(300);
+			startScan();
+		});
+
+		function startScan() {
+			$.post(ajaxurl, {
+				action: 'irw_start_scan',
+				nonce: nonce
+			}, function(response) {
+				if (response.success) {
+					totalFiles = response.data.total;
+					$('#wsg-scan-step').text('<?php echo esc_js( __( 'Scanning Files', 'ironwall' ) ); ?> (0 / ' + totalFiles + ')');
+					$('#wsg-start-scan-btn').html('<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation:spin 1s linear infinite;"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg> <?php echo esc_js( __( 'Scanning...', 'ironwall' ) ); ?>');
+					batchScan();
+				} else {
+					alert('<?php echo esc_js( __( 'Scan failed to initialize.', 'ironwall' ) ); ?>');
+					resetUI();
+				}
+			});
+		}
+
+		function batchScan() {
+			$.post(ajaxurl, {
+				action: 'irw_batch_scan',
+				nonce: nonce
+			}, function(response) {
+				if (response.success) {
+					if (response.data.done) {
+						completeScan();
+					} else {
+						processedFiles = response.data.progress;
+						let perc = Math.round((processedFiles / totalFiles) * 100);
+						$('#wsg-scan-bar').css('width', perc + '%');
+						$('#wsg-scan-perc').text(perc + '%');
+						$('#wsg-scan-step').text('<?php echo esc_js( __( 'Scanning Files', 'ironwall' ) ); ?> (' + processedFiles + ' / ' + totalFiles + ')');
+						batchScan();
+					}
+				} else {
+					alert('<?php echo esc_js( __( 'Batch scan error.', 'ironwall' ) ); ?>');
+					resetUI();
+				}
+			});
+		}
+
+		function completeScan() {
+			$('#wsg-scan-bar').css('width', '100%');
+			$('#wsg-scan-perc').text('100%');
+			$('#wsg-scan-status').text('<?php echo esc_js( __( 'Scanner Status: Complete ✓', 'ironwall' ) ); ?>');
+			$('#wsg-scan-step').text('<?php echo esc_js( __( 'Scan Finished Successfully!', 'ironwall' ) ); ?>');
+			$('#wsg-start-scan-btn').html('✓ <?php echo esc_js( __( 'Complete', 'ironwall' ) ); ?>').css('opacity', 1);
+			setTimeout(() => { location.reload(); }, 1200);
+		}
+
+		function resetUI() {
+			$('#wsg-start-scan-btn').prop('disabled', false).css('opacity', 1)
+				.html('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> <?php echo esc_js( __( 'Start Deep Scan', 'ironwall' ) ); ?>');
+			$('#wsg-scan-progress-container').hide();
+		}
+	});
+	</script>
+
+	<style>
+		@keyframes spin {
+			from { transform: rotate(0deg); }
+			to   { transform: rotate(360deg); }
+		}
+	</style>
+	<?php
 }

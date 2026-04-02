@@ -1,107 +1,94 @@
 <?php
-if(!defined('ABSPATH')){
-    exit;
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
 }
 
-function wsg_logs_page(){
-    global $wpdb;
-    $table=$wpdb->prefix.'wsg_logs';
-    $logs=$wpdb->get_results("SELECT * FROM $table ORDER BY id DESC LIMIT 100");
-    ?>
-    <style>
-        .wsg-wrap { max-width: 1100px; margin: 20px 20px 20px 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; }
-        .wsg-header { margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: flex-end; }
-        .wsg-header h1 { font-size: 28px; font-weight: 600; color: #1e293b; margin: 0 0 8px; line-height: 1.2; }
-        .wsg-header p { color: #64748b; font-size: 15px; margin: 0; }
-        
-        .wsg-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .wsg-card-header { padding: 20px 24px; border-bottom: 1px solid #f1f5f9; background: #fafafa; display: flex; justify-content: space-between; align-items: center; }
-        .wsg-card-header h3 { margin: 0; font-size: 16px; font-weight: 600; color: #334155; }
-        
-        /* Modern Table */
-        table.wsg-modern-table { width: 100%; border-collapse: collapse; text-align: left; }
-        table.wsg-modern-table th { background: #fff; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; padding: 16px 24px; border-bottom: 1px solid #e2e8f0; }
-        table.wsg-modern-table td { padding: 16px 24px; border-bottom: 1px solid #f1f5f9; color: #334155; font-size: 14px; vertical-align: middle; }
-        table.wsg-modern-table tr:last-child td { border-bottom: none; }
-        table.wsg-modern-table tr:hover { background: #f8fafc; }
-        
-        /* Event Badges */
-        .wsg-chip { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; text-transform: capitalize; border: 1px solid transparent; }
-        .chip-blocked { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
-        .chip-login { background: #eff6ff; color: #2563eb; border-color: #bfdbfe; }
-        .chip-default { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
-        
-        .time-date { font-weight: 500; color: #0f172a; display: block; }
-        .time-hour { color: #94a3b8; font-size: 12px; }
-        .ip-address { font-family: ui-monospace, monospace; color: #4f46e5; font-weight: 500; background: #e0e7ff; padding: 2px 6px; border-radius: 4px; }
-    </style>
+function irw_logs_page() {
+	global $wpdb;
 
-    <div class="wsg-wrap">
-        <div class="wsg-header">
-            <div>
-                <h1>Security Audit Logs</h1>
-                <p>A raw, unfiltered history of significant security events within WordPress.</p>
-            </div>
-            <div>
-                <a href="<?php echo admin_url('admin-post.php?action=wsg_export_logs'); ?>" class="button" style="color:#64748b; border-color:#cbd5e1;">Export CSV</a>
-            </div>
-        </div>
+	$table = $wpdb->prefix . 'irw_logs';
+	$logs  = $wpdb->get_results( "SELECT * FROM $table ORDER BY id DESC LIMIT 100" );
+	$count = count( $logs );
+	?>
+	<div class="wrap wsg-wrap">
+		<div class="wsg-header">
+			<div>
+				<h1><?php esc_html_e( 'Audit Logs', 'ironwall' ); ?></h1>
+				<p><?php esc_html_e( 'A raw, unfiltered history of significant security events.', 'ironwall' ); ?></p>
+			</div>
+			<div style="display:flex; gap:8px; align-items:center;">
+				<a href="<?php echo esc_url( admin_url( 'admin-post.php?action=irw_export_logs' ) ); ?>" class="button button-secondary">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+					<?php esc_html_e( 'Export CSV', 'ironwall' ); ?>
+				</a>
+			</div>
+		</div>
 
-        <div class="wsg-card">
-            <div class="wsg-card-header">
-                <h3>Latest 100 Events</h3>
-            </div>
-            
-            <?php if(empty($logs)): ?>
-                <div style="padding: 40px; text-align: center; color: #64748b;">
-                    <p>No audit logs recorded yet.</p>
-                </div>
-            <?php else: ?>
-                <table class="wsg-modern-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Timestamp</th>
-                            <th>Event Category</th>
-                            <th>IP Address</th>
-                            <th>Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach($logs as $log): 
-                            // Time is already stored as local time via current_time('mysql')
-                            // Display it directly — NO timezone conversion needed
-                            $raw_time = $log->created;
-                            
-                            // Determine chip style
-                            $chip_class = 'chip-default';
-                            $ev = strtolower($log->event);
-                            if (strpos($ev, 'block') !== false || strpos($ev, 'fail') !== false) {
-                                $chip_class = 'chip-blocked';
-                            } elseif (strpos($ev, 'login') !== false || strpos($ev, 'auth') !== false) {
-                                $chip_class = 'chip-login';
-                            }
-                        ?>
-                            <tr>
-                                <td style="color:#94a3b8; font-size:13px;">#<?php echo esc_html($log->id); ?></td>
-                                <td>
-                                    <span class="time-date"><?php echo esc_html(date('M j, Y', strtotime($raw_time))); ?></span>
-                                    <span class="time-hour"><?php echo esc_html(date('H:i:s', strtotime($raw_time))); ?></span>
-                                </td>
-                                <td><span class="wsg-chip <?php echo $chip_class; ?>"><?php echo esc_html($log->event); ?></span></td>
-                                <td><span class="ip-address"><?php echo esc_html($log->ip); ?></span></td>
-                                <td style="color:#64748b; font-size:13px;">
-                                    <?php 
-                                        if(!empty($log->username)) { echo "<strong>User:</strong> " . esc_html($log->username) . " | "; }
-                                        echo esc_html($log->details); 
-                                    ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php endif; ?>
-        </div>
-    </div>
-    <?php
+		<div class="wsg-card" style="padding:0; overflow:hidden;">
+			<div class="wsg-card-header" style="padding:18px 28px; display:flex; justify-content:space-between; align-items:center;">
+				<h3><?php esc_html_e( 'Latest Events', 'ironwall' ); ?></h3>
+				<span style="color:var(--wsg-text-dim); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">
+					<?php
+					printf(
+						/* translators: %d: number of events shown */
+						esc_html__( '%d events', 'ironwall' ),
+						$count
+					);
+					?>
+				</span>
+			</div>
+
+			<?php if ( empty( $logs ) ) : ?>
+				<div class="wsg-empty-state">
+					<div class="wsg-empty-icon">📋</div>
+					<p class="wsg-empty-text"><?php esc_html_e( 'No Audit Logs Yet', 'ironwall' ); ?></p>
+					<p class="wsg-empty-subtext"><?php esc_html_e( 'Security events will appear here as they are detected.', 'ironwall' ); ?></p>
+				</div>
+			<?php else : ?>
+				<table class="wsg-modern-table">
+					<thead>
+						<tr>
+							<th style="width:50px;"><?php esc_html_e( 'ID', 'ironwall' ); ?></th>
+							<th><?php esc_html_e( 'Timestamp', 'ironwall' ); ?></th>
+							<th><?php esc_html_e( 'Event', 'ironwall' ); ?></th>
+							<th><?php esc_html_e( 'IP Address', 'ironwall' ); ?></th>
+							<th><?php esc_html_e( 'Details', 'ironwall' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php
+						foreach ( $logs as $log ) :
+							$raw_time   = $log->created;
+							$chip_class = 'chip-default';
+							$ev         = strtolower( $log->event );
+							if ( false !== strpos( $ev, 'block' ) || false !== strpos( $ev, 'fail' ) ) {
+								$chip_class = 'chip-blocked';
+							} elseif ( false !== strpos( $ev, 'login' ) || false !== strpos( $ev, 'auth' ) ) {
+								$chip_class = 'chip-login';
+							}
+							?>
+							<tr>
+								<td style="color:var(--wsg-text-dim); font-size:12px;">#<?php echo esc_html( $log->id ); ?></td>
+								<td>
+									<span class="time-date"><?php echo esc_html( mysql2date( 'M j, Y', $raw_time ) ); ?></span>
+									<span class="time-hour"><?php echo esc_html( mysql2date( 'H:i:s', $raw_time ) ); ?></span>
+								</td>
+								<td><span class="wsg-chip <?php echo esc_attr( $chip_class ); ?>"><?php echo esc_html( $log->event ); ?></span></td>
+								<td><span class="ip-address"><?php echo esc_html( $log->ip ); ?></span></td>
+								<td style="color:var(--wsg-text-dim); font-size:13px; max-width:300px;">
+									<?php
+									if ( ! empty( $log->username ) ) {
+										echo '<strong style="color:var(--wsg-text);">' . esc_html( $log->username ) . '</strong> &mdash; ';
+									}
+									echo esc_html( $log->details );
+									?>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					</tbody>
+				</table>
+			<?php endif; ?>
+		</div>
+	</div>
+	<?php
 }
