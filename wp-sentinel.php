@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Ironwall
- * Plugin URI: https://github.com/Ajaypal110/WP-Sentinel
+ * Plugin URI: https://github.com/Ajaypal110/Ironwall.git
  * Description: Professional-grade WordPress security monitoring, WAF, and Malware Scanner.
  * Version: 5.1
  * Author: Ajaypal Singh

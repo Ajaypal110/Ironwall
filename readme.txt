@@ -1,5 +1,5 @@
 === Ironwall ===
-Contributors: Ajaypal Singh
+Developer: Ajaypal Singh
 Tags: security, firewall, waf, scanner, integrity, malware
 Requires at least: 5.0
 Tested up to: 6.4
