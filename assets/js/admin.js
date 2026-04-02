@@ -30,6 +30,15 @@
             setTimeout(function() {
                 $row.css('background', 'transparent');
             }, 600);
+
+            // Hide/Show stealth settings container
+            if ($(this).attr('id') === 'irw_stealth_enable') {
+                if ($(this).is(':checked')) {
+                    $('#irw-stealth-settings-container').slideDown(300);
+                } else {
+                    $('#irw-stealth-settings-container').slideUp(300);
+                }
+            }
         });
 
         // ── Keyboard shortcut: Ctrl+S to save settings ──

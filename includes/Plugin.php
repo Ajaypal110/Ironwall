@@ -134,6 +134,7 @@ class Plugin {
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']);
+        add_action('admin_notices', [$this, 'stealth_login_notice']);
         
         add_action('wp_ajax_irw_start_scan', [$this, 'ajax_start_scan']);
         add_action('wp_ajax_irw_batch_scan', [$this, 'ajax_batch_scan']);
@@ -148,6 +149,7 @@ class Plugin {
         register_setting('irw_settings_group', 'irw_login_protection');
         register_setting('irw_settings_group', 'irw_xmlrpc_disable');
         register_setting('irw_settings_group', 'irw_security_headers');
+        register_setting('irw_settings_group', 'irw_stealth_enable');
         register_setting('irw_settings_group', 'irw_login_slug');
     }
 
@@ -351,6 +353,29 @@ class Plugin {
 
     public function admin_footer_branding() {
         echo '<span id="footer-thankyou">' . esc_html__('Protected by', 'ironwall') . ' <strong>Ironwall</strong> v' . esc_html(IRW_VERSION) . '</span>';
+    }
+
+    public function stealth_login_notice() {
+        if (!get_option('irw_stealth_enable')) {
+            return;
+        }
+
+        $slug = get_option('irw_login_slug');
+        if (empty($slug) || $slug === 'wp-login.php') {
+            return;
+        }
+
+        $login_url = home_url('/' . $slug);
+        ?>
+        <div class="notice notice-warning is-dismissible wsg-admin-notice">
+            <p>
+                <strong><?php _e('Ironwall Stealth Mode Active:', 'ironwall'); ?></strong> 
+                <?php printf(__('Your custom login URL is: %s', 'ironwall'), '<code>' . esc_url($login_url) . '</code>'); ?>
+                <br>
+                <small><?php _e('Please bookmark this URL. The default wp-login.php is currently disabled.', 'ironwall'); ?></small>
+            </p>
+        </div>
+        <?php
     }
 
     public function enqueue_assets($hook) {

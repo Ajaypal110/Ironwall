@@ -4,7 +4,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 function irw_settings_page() {
-	$slug = get_option( 'irw_login_slug', 'secure-entrance' );
+	$slug = get_option( 'irw_login_slug' );
+	if ( empty( $slug ) ) {
+		$slug = 'wp-login.php';
+	}
 	?>
 	<div class="wrap wsg-wrap">
 		<div class="wsg-settings-header">
@@ -69,19 +72,32 @@ function irw_settings_page() {
 							<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--wsg-warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
 							<?php esc_html_e( 'Login Stealth (Cloaking)', 'ironwall' ); ?>
 						</h2>
-						<div class="wsg-setting-info" style="margin-bottom: 18px;">
-							<h4><?php esc_html_e( 'Custom Login Path', 'ironwall' ); ?></h4>
-							<p><?php esc_html_e( 'Obscure your WordPress login portal from automated bots and scanners.', 'ironwall' ); ?></p>
+						<div class="wsg-setting-row" style="padding-bottom: 20px; border-bottom: 1px solid var(--wsg-border); margin-bottom: 20px;">
+							<div class="wsg-setting-info">
+								<h4><?php esc_html_e( 'Enable Stealth Mode', 'ironwall' ); ?></h4>
+								<p><?php esc_html_e( 'Turn this on to actively hide your default WordPress login page.', 'ironwall' ); ?></p>
+							</div>
+							<label class="wsg-toggle">
+								<input type="checkbox" id="irw_stealth_enable" name="irw_stealth_enable" value="1" <?php checked( 1, get_option( 'irw_stealth_enable' ), true ); ?>>
+								<span class="wsg-slider"></span>
+							</label>
 						</div>
 
-						<input type="text" name="irw_login_slug" value="<?php echo esc_attr( $slug ); ?>" class="wsg-input-text" placeholder="<?php esc_attr_e( 'e.g. secure-login', 'ironwall' ); ?>">
+						<div id="irw-stealth-settings-container" <?php echo !get_option( 'irw_stealth_enable' ) ? 'style="display:none;"' : ''; ?>>
+							<div class="wsg-setting-info" style="margin-bottom: 18px;">
+								<h4><?php esc_html_e( 'Custom Login Path', 'ironwall' ); ?></h4>
+								<p><?php esc_html_e( 'Obscure your WordPress login portal from automated bots and scanners.', 'ironwall' ); ?></p>
+							</div>
 
-						<div class="wsg-url-preview">
-							<?php esc_html_e( 'Your active secure URL:', 'ironwall' ); ?> <strong><?php echo esc_url( home_url( '/' . $slug ) ); ?></strong>
-						</div>
+							<input type="text" name="irw_login_slug" value="<?php echo esc_attr( $slug === 'wp-login.php' ? '' : $slug ); ?>" class="wsg-input-text" placeholder="e.g. secure-login">
 
-						<div class="wsg-alert">
-							<p>⚠️ <?php esc_html_e( 'Important: Modifying this field immediately disables wp-login.php. Bookmark your new URL before saving!', 'ironwall' ); ?></p>
+							<div class="wsg-url-preview">
+								<?php esc_html_e( 'Your active secure URL:', 'ironwall' ); ?> <strong><?php echo esc_url( home_url( '/' . ($slug === 'wp-login.php' ? 'wp-login.php' : $slug) ) ); ?></strong>
+							</div>
+
+							<div class="wsg-alert">
+								<p>⚠️ <?php esc_html_e( 'Important: Modifying this field immediately disables wp-login.php. Bookmark your new URL before saving!', 'ironwall' ); ?></p>
+							</div>
 						</div>
 					</div>
 				</div>

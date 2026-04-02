@@ -6,16 +6,53 @@ if (!defined('ABSPATH')) exit;
 class LoginStealth {
 
     public function __construct() {
-        if (get_option('irw_login_slug')) {
-            add_action('login_init', [$this, 'block_default_login']);
-            add_action('init', [$this, 'custom_login_loader']);
+        if (defined('IRONWALL_DISABLE_STEALTH') && IRONWALL_DISABLE_STEALTH) {
+            return; // Safety fallback
+        }
+
+        $is_enabled = get_option('irw_stealth_enable');
+        $slug = get_option('irw_login_slug');
+
+        // Only enforce stealth login if the toggle is ON and a custom slug is actually set AND it's not the default wp-login.php
+        if ($is_enabled && !empty($slug) && $slug !== 'wp-login.php') {
+            add_action('login_init', [$this, 'block_default_login'], 1);
+            add_action('template_redirect', [$this, 'custom_login_loader'], 9999);
+            
+            // Rewrite standard URLs to point to our custom slug
+            add_filter('login_url', [$this, 'filter_login_url'], 10, 3);
+            add_filter('logout_url', [$this, 'filter_logout_url'], 10, 2);
+            add_filter('lostpassword_url', [$this, 'filter_login_url'], 10, 2);
+            add_filter('register_url', [$this, 'filter_login_url'], 10, 2);
+            
+            // Redirect after logout
             add_filter('logout_redirect', [$this, 'logout_redirect'], 10, 3);
         }
     }
 
     public function get_slug() {
-        $slug = get_option('irw_login_slug');
-        return empty($slug) ? 'secure-login' : trim($slug, '/');
+        static $slug = null;
+        if ($slug === null) {
+            $is_enabled = get_option('irw_stealth_enable');
+            $option = get_option('irw_login_slug');
+            $slug = (!$is_enabled || empty($option)) ? 'wp-login.php' : trim($option, '/');
+        }
+        return $slug;
+    }
+
+    public function filter_login_url($url, $redirect = '', $force_reauth = false) {
+        $custom_url = site_url('/' . $this->get_slug());
+        if (!empty($redirect)) {
+            $custom_url = add_query_arg('redirect_to', urlencode($redirect), $custom_url);
+        }
+        return $custom_url;
+    }
+
+    public function filter_logout_url($url, $redirect = '') {
+        $custom_url = site_url('/' . $this->get_slug() . '?action=logout');
+        if (!empty($redirect)) {
+            $custom_url = add_query_arg('redirect_to', urlencode($redirect), $custom_url);
+        }
+        return wp_nonce_url($custom_url, 'log-out');
     }
 
     public function block_default_login() {
@@ -30,17 +67,24 @@ class LoginStealth {
             }
         }
 
-        if (strpos($_SERVER['REQUEST_URI'], 'wp-login.php') !== false) {
-            wp_safe_redirect(home_url());
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+        if (strpos($request_uri, 'wp-login.php') !== false) {
+            wp_safe_redirect(home_url('/'));
             exit;
         }
     }
 
     public function custom_login_loader() {
         $slug = $this->get_slug();
-        $current = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+        $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+        $path = trim(parse_url($request_uri, PHP_URL_PATH), '/');
+        $site_path = trim(parse_url(home_url(), PHP_URL_PATH), '/');
+        
+        if (!empty($site_path)) {
+            $path = preg_replace('/^' . preg_quote($site_path, '/') . '\//', '', $path);
+        }
 
-        if ($current === $slug) {
+        if ($path === $slug) {
             global $pagenow, $user_login, $error, $wp_error, $action, $user, $user_ID, $interim_login, $redirect_to;
 
             $user_login = '';
@@ -51,12 +95,12 @@ class LoginStealth {
                 define('WP_LOGIN_PAGE', true);
             }
 
-            require_once ABSPATH . 'wp-login.php';
+            @require_once ABSPATH . 'wp-login.php';
             exit;
         }
     }
 
     public function logout_redirect($redirect, $requested, $user) {
-        return home_url('/' . $this->get_slug());
+        return site_url('/' . $this->get_slug() . '?loggedout=true');
     }
 }
