@@ -12,6 +12,14 @@ function wsg_register_settings(){
     register_setting('wsg_settings_group','wsg_security_headers');
     register_setting('wsg_settings_group','wsg_login_slug');
     register_setting('wsg_settings_group','wsg_enable_2fa');
+    // SMTP Settings
+    register_setting('wsg_settings_group','wsg_smtp_enabled');
+    register_setting('wsg_settings_group','wsg_smtp_host');
+    register_setting('wsg_settings_group','wsg_smtp_port');
+    register_setting('wsg_settings_group','wsg_smtp_username');
+    register_setting('wsg_settings_group','wsg_smtp_password');
+    register_setting('wsg_settings_group','wsg_smtp_from');
+    register_setting('wsg_settings_group','wsg_smtp_from_name');
 }
 
 /* Settings page */
@@ -134,8 +142,68 @@ function wsg_settings_page(){
                 </div>
             </div>
 
-            <p class="submit">
+            <div class="wsg-card">
+                <h2 class="wsg-card-title">📧 Email SMTP Configuration</h2>
+                <p style="color:#64748b; font-size:13px; margin-top:0; margin-bottom:16px;">Required for 2FA OTP delivery. Without SMTP, localhost cannot send emails.</p>
+                
+                <?php
+                $smtp_test = get_transient('wsg_smtp_test_result');
+                if ($smtp_test === 'success') {
+                    echo '<div style="background:#dcfce7; border-left:4px solid #22c55e; padding:12px 16px; border-radius:0 6px 6px 0; margin-bottom:16px;"><p style="color:#166534; margin:0; font-size:14px;">✅ Test email sent successfully! Check your inbox.</p></div>';
+                    delete_transient('wsg_smtp_test_result');
+                } elseif ($smtp_test && strpos($smtp_test, 'fail:') === 0) {
+                    $error = substr($smtp_test, 5);
+                    echo '<div class="wsg-alert" style="margin-bottom:16px;"><p>❌ SMTP Test Failed: ' . esc_html($error) . '</p></div>';
+                    delete_transient('wsg_smtp_test_result');
+                }
+                ?>
+                
+                <div class="wsg-setting-row">
+                    <div class="wsg-setting-info">
+                        <h4>Enable SMTP</h4>
+                        <p>Route all WordPress emails through an external SMTP server.</p>
+                    </div>
+                    <label class="wsg-toggle">
+                        <input type="checkbox" name="wsg_smtp_enabled" value="1" <?php checked(1,get_option('wsg_smtp_enabled'),true); ?>>
+                        <span class="wsg-slider"></span>
+                    </label>
+                </div>
+                
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:20px;">
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:6px;">SMTP Host</label>
+                        <input type="text" name="wsg_smtp_host" value="<?php echo esc_attr(get_option('wsg_smtp_host','smtp.gmail.com')); ?>" class="wsg-input-text" style="max-width:100%;" placeholder="smtp.gmail.com">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:6px;">SMTP Port</label>
+                        <input type="number" name="wsg_smtp_port" value="<?php echo esc_attr(get_option('wsg_smtp_port','587')); ?>" class="wsg-input-text" style="max-width:100%;" placeholder="587">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:6px;">SMTP Username (Email)</label>
+                        <input type="text" name="wsg_smtp_username" value="<?php echo esc_attr(get_option('wsg_smtp_username','')); ?>" class="wsg-input-text" style="max-width:100%;" placeholder="you@gmail.com">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:6px;">SMTP Password / App Password</label>
+                        <input type="password" name="wsg_smtp_password" value="<?php echo esc_attr(get_option('wsg_smtp_password','')); ?>" class="wsg-input-text" style="max-width:100%;" placeholder="App Password">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:6px;">From Email</label>
+                        <input type="text" name="wsg_smtp_from" value="<?php echo esc_attr(get_option('wsg_smtp_from','')); ?>" class="wsg-input-text" style="max-width:100%;" placeholder="you@gmail.com">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:6px;">From Name</label>
+                        <input type="text" name="wsg_smtp_from_name" value="<?php echo esc_attr(get_option('wsg_smtp_from_name', get_bloginfo('name'))); ?>" class="wsg-input-text" style="max-width:100%;" placeholder="WP Sentinel Security">
+                    </div>
+                </div>
+                
+                <div class="wsg-url-preview" style="margin-top:16px;">
+                    <strong>Gmail Users:</strong> Go to <a href="https://myaccount.google.com/apppasswords" target="_blank">Google App Passwords</a> → Generate a 16-character app password → Paste it above. Do NOT use your regular Gmail password.
+                </div>
+            </div>
+
+            <p class="submit" style="display:flex; gap:12px; align-items:center;">
                 <button type="submit" name="submit" class="button button-primary button-wsg-primary">Save Security Configuration</button>
+                <a href="<?php echo wp_nonce_url(admin_url('admin-post.php?action=wsg_test_smtp'), 'wsg_test_smtp_action'); ?>" class="button" style="border-color:#4f46e5; color:#4f46e5;">📧 Send Test Email</a>
             </p>
         </form>
     </div>

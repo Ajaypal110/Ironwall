@@ -108,7 +108,8 @@ class WSG_Login_Protection {
         if ($mail_sent) {
             wsg_insert_log('2FA Code Sent', $username, "Sent to $user_email");
         } else {
-            wsg_insert_log('2FA Email Failed', $username, "Server failed to send email to $user_email. Check SMTP/Mail configuration.");
+            // Fail-safe for localhost/XAMPP: Log the code so the user can see it in the dashboard
+            wsg_insert_log('2FA Email Failed', $username, "CRITICAL: Email delivery failed. Your OTP code is: $code (Check this log if you didn't get the email)");
         }
 
         // Render the 2FA form

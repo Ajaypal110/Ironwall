@@ -29,6 +29,7 @@ require WSG_PATH.'admin/logs-page.php';
 require WSG_PATH.'core/login-stealth.php';
 require WSG_PATH.'core/security-scan.php';
 require WSG_PATH.'core/export.php';
+require WSG_PATH.'core/smtp.php';
 
 // Branding Override: Custom "View Details" Modal
 add_filter('plugins_api', 'wsg_plugin_info_override', 20, 3);
