@@ -3,7 +3,7 @@ Developer: Ajaypal Singh
 Tags: security, firewall, waf, scanner, integrity, malware
 Requires at least: 5.0
 Tested up to: 6.4
-Stable tag: 4.6
+Stable tag: 6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,11 @@ Ironwall is a lightweight yet powerful security suite designed to provide enterp
 3. Configure settings via the 'Ironwall' dashboard.
 
 == Changelog ==
+
+= 6.0 =
+* Final production release with adaptive timezone UI & finalized layouts.
+* Enterprise WAF engine, Live Traffic Logs, deep algorithmic malware scanner.
+* Complete UI/UX dark mode overhaul.
 
 = 4.6 =
 * Integrated Chart.js for visual security analytics.

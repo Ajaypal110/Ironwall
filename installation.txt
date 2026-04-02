@@ -1,6 +1,6 @@
 Ironwall – INSTALLATION GUIDE
 
-Version: 4.6
+Version: 6.0
 Developer: Ajaypal Singh
 
 INSTALLATION STEPS:
