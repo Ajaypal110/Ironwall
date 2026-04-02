@@ -69,7 +69,9 @@ function wsg_logs_page(){
                     </thead>
                     <tbody>
                         <?php foreach($logs as $log): 
-                            $date_obj = new DateTime($log->created);
+                            // Time is already stored as local time via current_time('mysql')
+                            // Display it directly — NO timezone conversion needed
+                            $raw_time = $log->created;
                             
                             // Determine chip style
                             $chip_class = 'chip-default';
@@ -83,8 +85,8 @@ function wsg_logs_page(){
                             <tr>
                                 <td style="color:#94a3b8; font-size:13px;">#<?php echo esc_html($log->id); ?></td>
                                 <td>
-                                    <span class="time-date"><?php echo $date_obj->format('M j, Y'); ?></span>
-                                    <span class="time-hour"><?php echo $date_obj->format('H:i:s'); ?> Local</span>
+                                    <span class="time-date"><?php echo esc_html(date('M j, Y', strtotime($raw_time))); ?></span>
+                                    <span class="time-hour"><?php echo esc_html(date('H:i:s', strtotime($raw_time))); ?></span>
                                 </td>
                                 <td><span class="wsg-chip <?php echo $chip_class; ?>"><?php echo esc_html($log->event); ?></span></td>
                                 <td><span class="ip-address"><?php echo esc_html($log->ip); ?></span></td>

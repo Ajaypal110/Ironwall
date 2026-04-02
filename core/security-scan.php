@@ -128,7 +128,8 @@ class WSG_Scanner {
             'file_path' => $file,
             'issue_type' => $type,
             'severity' => $severity,
-            'details' => $details
+            'details' => $details,
+            'created' => current_time('mysql')
         ));
     }
 }

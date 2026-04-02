@@ -302,7 +302,7 @@ function wsg_dashboard(){
                                     <tr>
                                         <td><strong><?php echo esc_html($block->ip); ?></strong></td>
                                         <td><?php echo esc_html($block->reason); ?></td>
-                                        <td style="color:var(--wsg-text-muted);"><?php echo esc_html(mysql2date('M j, Y H:i', $block->created)); ?></td>
+                                        <td style="color:var(--wsg-text-muted);"><?php echo esc_html(date('M j, Y H:i', strtotime($block->created))); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

@@ -83,7 +83,7 @@ function wsg_live_traffic_page(){
                     <?php else: ?>
                         <?php foreach($results as $res): ?>
                             <tr>
-                                <td style="white-space: nowrap;"><?php echo esc_html(mysql2date('H:i:s M j', $res->created)); ?></td>
+                                <td style="white-space: nowrap;"><?php echo esc_html(date('H:i:s M j', strtotime($res->created))); ?></td>
                                 <td>
                                     <?php if($res->is_bot): ?>
                                         <span class="wsg-bot">Bot / Crawler</span>

@@ -94,11 +94,12 @@ function wsg_block_ip($ip, $reason, $duration_seconds = 86400) {
     $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE ip = %s AND blocked_until > NOW()", $ip));
     
     if (!$exists) {
-        $until = gmdate('Y-m-d H:i:s', time() + $duration_seconds);
+        $until = date('Y-m-d H:i:s', current_time('timestamp') + $duration_seconds);
         $wpdb->insert($table, array(
             'ip'=>$ip,
             'reason'=>$reason,
-            'blocked_until'=>$until
+            'blocked_until'=>$until,
+            'created'=>current_time('mysql')
         ));
         wsg_insert_log("IP Blocked", "", "IP $ip blocked for: $reason");
     }
