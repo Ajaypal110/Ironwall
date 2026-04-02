@@ -70,8 +70,8 @@ function irw_logs_page() {
 							<tr>
 								<td style="color:var(--wsg-text-dim); font-size:12px;">#<?php echo esc_html( $log->id ); ?></td>
 								<td>
-									<span class="time-date"><?php echo esc_html( mysql2date( 'M j, Y', $raw_time ) ); ?></span>
-									<span class="time-hour"><?php echo esc_html( mysql2date( 'H:i:s', $raw_time ) ); ?></span>
+									<span class="time-date irw-localize-date" data-timestamp="<?php echo esc_attr( get_gmt_from_date( $raw_time ) . 'Z' ); ?>"><?php echo esc_html( mysql2date( 'M j, Y', $raw_time ) ); ?></span>
+									<span class="time-hour irw-localize-time" data-timestamp="<?php echo esc_attr( get_gmt_from_date( $raw_time ) . 'Z' ); ?>"><?php echo esc_html( mysql2date( 'H:i:s', $raw_time ) ); ?></span>
 								</td>
 								<td><span class="wsg-chip <?php echo esc_attr( $chip_class ); ?>"><?php echo esc_html( $log->event ); ?></span></td>
 								<td><span class="ip-address"><?php echo esc_html( $log->ip ); ?></span></td>

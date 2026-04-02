@@ -83,8 +83,8 @@ function irw_live_traffic_page() {
 						<?php foreach ( $results as $res ) : ?>
 							<tr>
 								<td style="white-space:nowrap;">
-									<span class="time-date"><?php echo esc_html( mysql2date( 'H:i:s', $res->created ) ); ?></span>
-									<span class="time-hour"><?php echo esc_html( mysql2date( 'M j', $res->created ) ); ?></span>
+									<span class="time-date irw-localize-time" data-timestamp="<?php echo esc_attr( get_gmt_from_date( $res->created ) . 'Z' ); ?>"><?php echo esc_html( mysql2date( 'H:i:s', $res->created ) ); ?></span>
+									<span class="time-hour irw-localize-date" data-timestamp="<?php echo esc_attr( get_gmt_from_date( $res->created ) . 'Z' ); ?>"><?php echo esc_html( mysql2date( 'M j', $res->created ) ); ?></span>
 								</td>
 								<td>
 									<?php if ( $res->is_bot ) : ?>

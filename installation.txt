@@ -1,4 +1,4 @@
-WP SENTINEL – INSTALLATION GUIDE
+Ironwall – INSTALLATION GUIDE
 
 Version: 4.6
 Developer: Ajaypal Singh

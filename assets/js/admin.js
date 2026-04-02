@@ -43,6 +43,32 @@
             }
         });
 
+        // ── Localize Dates & Times ──
+        $('.irw-localize-date').each(function() {
+            var ts = $(this).data('timestamp');
+            if (ts) {
+                var d = new Date(ts.replace(' ', 'T'));
+                if (!isNaN(d)) {
+                    var opts = { month: 'short', day: 'numeric', year: 'numeric' };
+                    // If no year was in the original text and it's short, display without year
+                    if ($(this).text().indexOf(',') === -1 && $(this).text().length < 8) {
+                         opts = { month: 'short', day: 'numeric' };
+                    }
+                    $(this).text(d.toLocaleDateString(undefined, opts));
+                }
+            }
+        });
+
+        $('.irw-localize-time').each(function() {
+            var ts = $(this).data('timestamp');
+            if (ts) {
+                var d = new Date(ts.replace(' ', 'T'));
+                if (!isNaN(d)) {
+                    $(this).text(d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
+                }
+            }
+        });
+
     });
 
 })(jQuery);
