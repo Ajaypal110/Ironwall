@@ -78,12 +78,12 @@ function irw_settings_page() {
 								<p><?php esc_html_e( 'Turn this on to actively hide your default WordPress login page.', 'ironwall' ); ?></p>
 							</div>
 							<label class="wsg-toggle">
-								<input type="checkbox" id="irw_stealth_enable" name="irw_stealth_enable" value="1" <?php checked( 1, get_option( 'irw_stealth_enable' ), true ); ?>>
+								<input type="checkbox" id="irw_stealth_enable" name="irw_stealth_enable" value="1" <?php checked( 1, get_option( 'irw_stealth_enable', 0 ), true ); ?>>
 								<span class="wsg-slider"></span>
 							</label>
 						</div>
 
-						<div id="irw-stealth-settings-container" <?php echo !get_option( 'irw_stealth_enable' ) ? 'style="display:none;"' : ''; ?>>
+						<div id="irw-stealth-settings-container" <?php echo !get_option( 'irw_stealth_enable', 0 ) ? 'style="display:none;"' : ''; ?>>
 							<div class="wsg-setting-info" style="margin-bottom: 18px;">
 								<h4><?php esc_html_e( 'Custom Login Path', 'ironwall' ); ?></h4>
 								<p><?php esc_html_e( 'Obscure your WordPress login portal from automated bots and scanners.', 'ironwall' ); ?></p>

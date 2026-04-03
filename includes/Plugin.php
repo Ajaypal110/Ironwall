@@ -86,6 +86,7 @@ class Plugin {
         add_option('irw_login_protection', 1);
         add_option('irw_security_headers', 1);
         add_option('irw_xmlrpc_disable', 1);
+        add_option('irw_stealth_enable', 0);
         add_option('irw_login_slug', 'secure-entrance');
         
         flush_rewrite_rules();

@@ -11,7 +11,7 @@ class LoginStealth {
             return; // Safety fallback
         }
 
-        $is_enabled = get_option('irw_stealth_enable');
+        $is_enabled = get_option('irw_stealth_enable', 0);
         $slug = get_option('irw_login_slug');
 
         // Only enforce stealth login if the toggle is ON and a custom slug is actually set AND it's not the default wp-login.php
@@ -37,7 +37,7 @@ class LoginStealth {
     public function get_slug() {
         static $slug = null;
         if ($slug === null) {
-            $is_enabled = get_option('irw_stealth_enable');
+            $is_enabled = get_option('irw_stealth_enable', 0);
             $option = get_option('irw_login_slug');
             $slug = (!$is_enabled || empty($option)) ? 'wp-login.php' : trim($option, '/');
         }
